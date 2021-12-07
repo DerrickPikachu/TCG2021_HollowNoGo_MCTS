@@ -16,6 +16,7 @@
 #include <algorithm>
 #include "board.h"
 #include "action.h"
+#include "mcts.h"
 #include <fstream>
 
 class agent {
