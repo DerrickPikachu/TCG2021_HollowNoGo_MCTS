@@ -11,6 +11,7 @@
 #include <string>
 #include <cmath>
 #include <random>
+#include <ctime>
 
 class Mcts {
 private:
@@ -23,9 +24,16 @@ private:
     };
 
 public:
-    Mcts(std::vector<action::place> s) : space(s) {
+    Mcts(board::piece_type type) : who(type),
+                                   blackSpace(board::size_x * board::size_y),
+                                   whiteSpace(board::size_x * board::size_y){
         resetMcts();
-        engine.seed(12345);
+        srand(time(NULL));
+        engine.seed(rand() % 100000);
+        for (int i = 0; i < (int)blackSpace.size(); i++)
+            blackSpace[i] = action::place(i, board::black);
+        for (int i = 0; i < (int)whiteSpace.size(); i++)
+            whiteSpace[i] = action::place(i, board::white);
     }
 
     void setupRoot(board& b) {
@@ -42,10 +50,10 @@ public:
         }
     }
 
-private:
+public:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
-            simulate(node, isOpponent);
+            simulate(node->position, isOpponent);
         } else {
             Node* nextNode = select(node);
             int result = traverse(nextNode, !isOpponent);
@@ -67,13 +75,12 @@ private:
         return nextNode;
     }
 
-    // Need test
-    int simulate(Node* node, bool isOpponent) {
-        board curPosition = node->position;
-        action::place randomMove = getRandomAction(curPosition);
+    int simulate(const board& position, bool isOpponent) {
+        board curPosition = position;
+        action::place randomMove = getRandomAction(curPosition, isOpponent);
         while (randomMove.apply(curPosition) == board::legal) {
             isOpponent = !isOpponent;
-            randomMove = getRandomAction(curPosition);
+            randomMove = getRandomAction(curPosition, isOpponent);
         }
         return isOpponent;
     }
@@ -82,8 +89,12 @@ private:
 
     }
 
-    action::place getRandomAction(const board& position) {
-        std::vector<action::place> temSpace = space;
+    action::place getRandomAction(const board& position, bool isOpponent) {
+        std::vector<action::place> temSpace;
+        if ((!isOpponent && who == board::black) || (isOpponent && who == board::white))
+            temSpace = blackSpace;
+        if ((!isOpponent && who == board::white) || (isOpponent && who == board::black))
+            temSpace = whiteSpace;
         std::shuffle(temSpace.begin(), temSpace.end(), engine);
         for (action::place& move : temSpace) {
             board nextBoard = position;
@@ -111,7 +122,9 @@ private:
     }
 
 private:
-    std::vector<action::place> space;
+    std::vector<action::place> blackSpace;
+    std::vector<action::place> whiteSpace;
+    board::piece_type who;
     Node* root;
     std::default_random_engine engine;
 };

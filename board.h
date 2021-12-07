@@ -225,7 +225,7 @@ public:
 			out << ' ' << axis_x_label[std::min(x, 19)];
 		out << ' ' << std::setw(width_y) << ' ' << std::endl;
 
-		// for displaying { space, black, white }
+		// for displaying { blackSpace, black, white }
 		const char* print[] = {"\u00B7" /* or \u00A0 */, "\u25CF", "\u25CB", "\u00A0", "?"};
 		for (int y = size_y - 1; y >= 0; y--) {
 			out << std::right << std::setw(width_y) << (y + 1);
