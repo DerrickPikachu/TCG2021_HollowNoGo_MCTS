@@ -24,9 +24,9 @@ private:
     };
 
 public:
-    Mcts(board::piece_type type) : who(type),
-                                   blackSpace(board::size_x * board::size_y),
-                                   whiteSpace(board::size_x * board::size_y){
+    Mcts(board::piece_type type) : blackSpace(board::size_x * board::size_y),
+                                   whiteSpace(board::size_x * board::size_y),
+                                   who(type) {
         resetMcts();
         srand(time(NULL));
         engine.seed(rand() % 100000);
@@ -53,18 +53,22 @@ public:
 public:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
-            simulate(node->position, isOpponent);
+            int result = simulate(node->position, isOpponent);
+            expand(node, isOpponent);
+            update(node, result);
+            return result;
         } else {
             Node* nextNode = select(node);
+            std::cout << nextNode->position << std::endl;
             int result = traverse(nextNode, !isOpponent);
-            // update
+            update(node, result);
             return result;
         }
     }
 
     Node* select(Node* node) {
         float bestScore = 0;
-        Node* nextNode;
+        Node* nextNode = node->childs[0];
         for (Node* child : node->childs) {
             float score = uct(*child, node->visitCount);
             if (bestScore < score) {
@@ -76,25 +80,37 @@ public:  // After testing, it should be private
     }
 
     int simulate(const board& position, bool isOpponent) {
+        std::string test;
         board curPosition = position;
         action::place randomMove = getRandomAction(curPosition, isOpponent);
         while (randomMove.apply(curPosition) == board::legal) {
+//            std::cout << curPosition << std::endl;
+//            std::cin >> test;
             isOpponent = !isOpponent;
             randomMove = getRandomAction(curPosition, isOpponent);
         }
         return isOpponent;
     }
 
-    std::vector<Node*> expand(Node* node) {
+    void expand(Node* node, bool isOpponent) {
+        std::vector<Node*> childs;
+        std::vector<action::place>& nextSpace = (isBlackTurn(isOpponent)) ? blackSpace : whiteSpace;
+        std::shuffle(nextSpace.begin(), nextSpace.end(), engine);
+        for (action::place& move : nextSpace) {
+            board curPosition = node->position;
+            if (move.apply(curPosition) == board::legal)
+                childs.push_back(new Node(curPosition));
+        }
+        node->childs = childs;
+    }
 
+    void update(Node* node, int result) {
+        node->visitCount++;
+        node->wins += result;
     }
 
     action::place getRandomAction(const board& position, bool isOpponent) {
-        std::vector<action::place> temSpace;
-        if ((!isOpponent && who == board::black) || (isOpponent && who == board::white))
-            temSpace = blackSpace;
-        if ((!isOpponent && who == board::white) || (isOpponent && who == board::black))
-            temSpace = whiteSpace;
+        std::vector<action::place> temSpace = (isBlackTurn(isOpponent))? blackSpace : whiteSpace;
         std::shuffle(temSpace.begin(), temSpace.end(), engine);
         for (action::place& move : temSpace) {
             board nextBoard = position;
@@ -105,8 +121,8 @@ public:  // After testing, it should be private
         return temSpace[0];
     }
 
-    std::vector<board> getPossibleBoard(const board& b) {
-
+    bool isBlackTurn(bool isOpponent) {
+        return (!isOpponent && who == board::black) || (isOpponent && who == board::white);
     }
 
     float uct(Node& node, int parentVisitCount) {
@@ -121,11 +137,11 @@ public:  // After testing, it should be private
         return path + "_" + moveCode;
     }
 
+    Node* root;
 private:
     std::vector<action::place> blackSpace;
     std::vector<action::place> whiteSpace;
     board::piece_type who;
-    Node* root;
     std::default_random_engine engine;
 };
 
