@@ -27,7 +27,6 @@ public:
     Mcts(board::piece_type type) : blackSpace(board::size_x * board::size_y),
                                    whiteSpace(board::size_x * board::size_y),
                                    who(type) {
-        resetMcts();
         srand(time(NULL));
         engine.seed(rand() % 100000);
         for (int i = 0; i < (int)blackSpace.size(); i++)
@@ -40,14 +39,29 @@ public:
         root = new Node(b);
     }
 
-    void resetMcts() {
-        root = nullptr;
+    void resetMcts(Node* node=nullptr) {
+        if (node == nullptr)
+            node = root;
+        for (int i = 0; i < (int)node->childs.size(); i++)
+            resetMcts(node->childs[i]);
+        delete node;
     }
 
     void search(int timesOfMcts) {
-        for (int i = 0; i < timesOfMcts; i++) {
+        for (int i = 0; i < timesOfMcts; i++)
+            traverse(root);
+    }
 
+    action::place getMostVisitCount() {
+        int bestCount = 0;
+        Node* bestNode = root->childs[0];
+        for (int i = 0; i < (int)root->childs.size(); i++) {
+            if (bestCount < root->childs[i]->visitCount) {
+                bestCount = root->childs[i]->visitCount;
+                bestNode = root->childs[i];
+            }
         }
+        return findActionByNextBoard(bestNode->position);
     }
 
 public:  // After testing, it should be private
@@ -59,7 +73,7 @@ public:  // After testing, it should be private
             return result;
         } else {
             Node* nextNode = select(node);
-            std::cout << nextNode->position << std::endl;
+//            std::cout << nextNode->position << std::endl;
             int result = traverse(nextNode, !isOpponent);
             update(node, result);
             return result;
@@ -68,15 +82,23 @@ public:  // After testing, it should be private
 
     Node* select(Node* node) {
         float bestScore = 0;
-        Node* nextNode = node->childs[0];
+        std::vector<Node*> nextNodes;
         for (Node* child : node->childs) {
             float score = uct(*child, node->visitCount);
             if (bestScore < score) {
                 bestScore = score;
-                nextNode = child;
+                nextNodes.clear();
+                nextNodes.push_back(child);
+            } else if (bestScore == score) {
+                nextNodes.push_back(child);
             }
         }
-        return nextNode;
+        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
+        if (nextNodes.empty()) {
+            std::cerr << "select error" << std::endl;
+            exit(0);
+        }
+        return nextNodes[0];
     }
 
     int simulate(const board& position, bool isOpponent) {
@@ -95,7 +117,7 @@ public:  // After testing, it should be private
     void expand(Node* node, bool isOpponent) {
         std::vector<Node*> childs;
         std::vector<action::place>& nextSpace = (isBlackTurn(isOpponent)) ? blackSpace : whiteSpace;
-        std::shuffle(nextSpace.begin(), nextSpace.end(), engine);
+//        std::shuffle(nextSpace.begin(), nextSpace.end(), engine);
         for (action::place& move : nextSpace) {
             board curPosition = node->position;
             if (move.apply(curPosition) == board::legal)
@@ -126,10 +148,22 @@ public:  // After testing, it should be private
     }
 
     float uct(Node& node, int parentVisitCount) {
-        float c = 0.3;
+        float c = 0.4;
         float exploitation = (float)node.wins / (float)(node.visitCount + 1);
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
         return exploitation + c * exploration;
+    }
+
+    action::place findActionByNextBoard(const board& nextBoard) {
+        std::vector<action::place>& temSpace = (who == board::black)? blackSpace : whiteSpace;
+        for (action::place& move : temSpace) {
+            board position = root->position;
+            if (move.apply(position) == board::legal && position == nextBoard)
+                return move;
+        }
+        std::cerr << "find action error" << std::endl;
+        exit(0);  // Error with call
+//        return action::place(temSpace[0]);
     }
 
     std::string appendPath(std::string path, const action::place& move) {

@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <stdlib.h>
 #include <fstream>
 #include <iterator>
 #include <string>
@@ -13,7 +14,7 @@
 #include "statistic.h"
 #include "mcts.h"
 
-int main() {
+void testTraverse() {
     board testBoard;
     Mcts mcts(board::black);
     mcts.setupRoot(testBoard);
@@ -24,9 +25,31 @@ int main() {
         getline(std::cin, tem);
         std::cout << "start traverse" << std::endl;
         mcts.traverse(mcts.root);
-        for (int i = 0; i < mcts.root->childs.size(); i++)
+        for (int i = 0; i < (int)mcts.root->childs.size(); i++)
             std::cout << mcts.root->childs[i]->visitCount << " ";
         std::cout << std::endl;
+    }
+}
+
+int main() {
+    board testBoard;
+    Mcts mcts(board::black);
+    std::string tem;
+    std::cout << "start routine" << std::endl;
+    while (true) {
+        mcts.setupRoot(testBoard);
+        mcts.search(3200);
+
+        for (int i = 0; i < (int)mcts.root->childs.size(); i++)
+            std::cout << mcts.root->childs[i]->visitCount << " ";
+        std::cout << std::endl;
+
+        action::place move = mcts.getMostVisitCount();
+        board b = testBoard;
+        move.apply(b);
+        std::cout << b << std::endl;
+        mcts.resetMcts();
+        getline(std::cin, tem);
     }
 }
 
