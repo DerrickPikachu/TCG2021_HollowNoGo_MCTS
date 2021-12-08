@@ -44,7 +44,7 @@ int main() {
             std::cout << mcts.root->childs[i]->visitCount << " ";
         std::cout << std::endl;
 
-        action::place move = mcts.getMostVisitCount();
+        action::place move = mcts.chooseAction();
         board b = testBoard;
         move.apply(b);
         std::cout << b << std::endl;

@@ -74,7 +74,7 @@ protected:
 class player : public random_agent {
 public:
 	player(const std::string& args = "") : random_agent("name=random role=unknown " + args),
-		space(board::size_x * board::size_y), who(board::empty) {
+		space(board::size_x * board::size_y), who(board::empty), mcts() {
 		if (name().find_first_of("[]():; ") != std::string::npos)
 			throw std::invalid_argument("invalid name: " + name());
 		if (role() == "black") who = board::black;
@@ -83,19 +83,37 @@ public:
 			throw std::invalid_argument("invalid role: " + role());
 		for (size_t i = 0; i < space.size(); i++)
 			space[i] = action::place(i, who);
+		mcts.setWho(who);
 	}
 
 	virtual action take_action(const board& state) {
-		std::shuffle(space.begin(), space.end(), engine);
-		for (const action::place& move : space) {
-			board after = state;
-			if (move.apply(after) == board::legal)
-				return move;
+		if (std::string(meta["name"]) == "mcts") {
+		    return mctsAction(state);
+		} else {
+		    return randomAction(state);
 		}
-		return action();
+	}
+
+	action randomAction(const board& state) {
+        std::shuffle(space.begin(), space.end(), engine);
+        for (const action::place& move : space) {
+            board after = state;
+            if (move.apply(after) == board::legal)
+                return move;
+        }
+        return action();
+	}
+
+	action mctsAction(const board& state) {
+	    mcts.setupRoot(state);
+	    mcts.search(int(meta["simulation"]));
+	    action::place move = mcts.chooseAction();
+	    mcts.resetMcts();
+	    return move;
 	}
 
 private:
 	std::vector<action::place> space;
 	board::piece_type who;
+	Mcts mcts;
 };

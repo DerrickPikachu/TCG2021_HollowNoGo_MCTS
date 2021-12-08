@@ -24,9 +24,8 @@ private:
     };
 
 public:
-    Mcts(board::piece_type type) : blackSpace(board::size_x * board::size_y),
-                                   whiteSpace(board::size_x * board::size_y),
-                                   who(type) {
+    Mcts() : blackSpace(board::size_x * board::size_y),
+                                   whiteSpace(board::size_x * board::size_y) {
         srand(time(NULL));
         engine.seed(rand() % 100000);
         for (int i = 0; i < (int)blackSpace.size(); i++)
@@ -34,8 +33,15 @@ public:
         for (int i = 0; i < (int)whiteSpace.size(); i++)
             whiteSpace[i] = action::place(i, board::white);
     }
+    Mcts(board::piece_type type) : Mcts() {
+        setWho(type);
+    }
 
-    void setupRoot(board& b) {
+    void setWho(board::piece_type type) {
+        who = type;
+    }
+
+    void setupRoot(const board& b) {
         root = new Node(b);
     }
 
@@ -52,7 +58,9 @@ public:
             traverse(root);
     }
 
-    action::place getMostVisitCount() {
+    action::place chooseAction() {
+        if (root->childs.empty())
+            return action::place(0, who);
         int bestCount = 0;
         Node* bestNode = root->childs[0];
         for (int i = 0; i < (int)root->childs.size(); i++) {
@@ -64,7 +72,7 @@ public:
         return findActionByNextBoard(bestNode->position);
     }
 
-public:  // After testing, it should be private
+private:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
             int result = simulate(node->position, isOpponent);
@@ -117,7 +125,6 @@ public:  // After testing, it should be private
     void expand(Node* node, bool isOpponent) {
         std::vector<Node*> childs;
         std::vector<action::place>& nextSpace = (isBlackTurn(isOpponent)) ? blackSpace : whiteSpace;
-//        std::shuffle(nextSpace.begin(), nextSpace.end(), engine);
         for (action::place& move : nextSpace) {
             board curPosition = node->position;
             if (move.apply(curPosition) == board::legal)
@@ -163,7 +170,6 @@ public:  // After testing, it should be private
         }
         std::cerr << "find action error" << std::endl;
         exit(0);  // Error with call
-//        return action::place(temSpace[0]);
     }
 
     std::string appendPath(std::string path, const action::place& move) {
