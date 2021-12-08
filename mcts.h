@@ -155,7 +155,7 @@ private:  // After testing, it should be private
     }
 
     float uct(Node& node, int parentVisitCount) {
-        float c = 0.4;
+        float c = 1.5;
         float exploitation = (float)node.wins / (float)(node.visitCount + 1);
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
         return exploitation + c * exploration;
@@ -177,8 +177,8 @@ private:  // After testing, it should be private
         return path + "_" + moveCode;
     }
 
-    Node* root;
 private:
+    Node* root;
     std::vector<action::place> blackSpace;
     std::vector<action::place> whiteSpace;
     board::piece_type who;
