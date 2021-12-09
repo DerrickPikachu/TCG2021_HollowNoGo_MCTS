@@ -86,6 +86,10 @@ public:
 		mcts.setWho(who);
 	}
 
+    virtual void close_episode(const std::string& flag = "") {
+        mcts.resetMcts();
+    }
+
 	virtual action take_action(const board& state) {
 		if (std::string(meta["name"]) == "mcts") {
 		    return mctsAction(state);
@@ -106,7 +110,7 @@ public:
 
 	action mctsAction(const board& state) {
 	    mcts.setupRoot(state);
-	    mcts.search(int(meta["simulation"]));
+	    mcts.search(int(meta["simulation"]), float(meta["explore"]));
 	    action::place move = mcts.chooseAction();
 //	    mcts.resetMcts();
 	    return move;

@@ -8,10 +8,10 @@
 #include <unordered_map>
 #include <stdlib.h>
 #include <iostream>
+#include <ctime>
 #include <string>
 #include <cmath>
 #include <random>
-#include <ctime>
 
 class Mcts {
 private:
@@ -24,9 +24,9 @@ private:
     };
 
 public:
-    Mcts() : root(nullptr),
-        blackSpace(board::size_x * board::size_y),
-        whiteSpace(board::size_x * board::size_y) {
+    Mcts() : root(nullptr), exploreC(0),
+             blackSpace(board::size_x * board::size_y),
+             whiteSpace(board::size_x * board::size_y) {
         srand(time(NULL));
         engine.seed(rand() % 100000);
         for (int i = 0; i < (int)blackSpace.size(); i++)
@@ -58,22 +58,23 @@ public:
     }
 
     void resetMcts(Node* node=nullptr) {
-        if (node == nullptr)
+        if (root == nullptr) return;
+        if (node == nullptr) {
             node = root;
+            root = nullptr;
+        }
         for (int i = 0; i < (int)node->childs.size(); i++)
             resetMcts(node->childs[i]);
         delete node;
     }
 
-    void search(int timesOfMcts) {
+    void search(int timesOfMcts, float constant) {
+        exploreC = constant;
         for (int i = 0; i < timesOfMcts; i++)
             traverse(root);
     }
 
     action::place chooseAction() {
-        for (int i = 0; i < (int)root->childs.size(); i++)
-            std::cout << root->childs[i]->visitCount << " ";
-        std::cout << std::endl;
         if (root->childs.empty())
             return action::place(0, who);
         int bestCount = 0;
@@ -173,10 +174,9 @@ private:  // After testing, it should be private
 
     float uct(Node& node, int parentVisitCount) {
         if (node.visitCount == 0) return 10000.0;
-        float c = 1.5;
         float exploitation = (float)node.wins / (float)(node.visitCount + 1);
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
-        return exploitation + c * exploration;
+        return exploitation + exploreC * exploration;
     }
 
     action::place findActionByNextBoard(const board& nextBoard) {
@@ -206,11 +206,11 @@ private:  // After testing, it should be private
 
 private:
     Node* root;
+    float exploreC;
     std::vector<action::place> blackSpace;
     std::vector<action::place> whiteSpace;
     board::piece_type who;
     std::default_random_engine engine;
 };
-
 
 #endif //TCG_NOGO_MCTS_MCTS_H
