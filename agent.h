@@ -108,7 +108,7 @@ public:
 	    mcts.setupRoot(state);
 	    mcts.search(int(meta["simulation"]));
 	    action::place move = mcts.chooseAction();
-	    mcts.resetMcts();
+//	    mcts.resetMcts();
 	    return move;
 	}
 

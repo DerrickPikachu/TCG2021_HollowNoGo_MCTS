@@ -31,7 +31,7 @@ void testTraverse() {
     }
 }
 
-int main() {
+void testSearch() {
     board testBoard;
     Mcts mcts(board::black);
     std::string tem;
@@ -50,6 +50,17 @@ int main() {
         std::cout << b << std::endl;
         mcts.resetMcts();
         getline(std::cin, tem);
+    }
+}
+
+int main() {
+    board testBoard;
+    Mcts mcts(board::black);
+    std::string tem;
+    mcts.setupRoot(testBoard);
+    int it = 0;
+    while (it < 20000) {
+        mcts.traverse(mcts.root);
     }
 }
 

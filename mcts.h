@@ -24,8 +24,9 @@ private:
     };
 
 public:
-    Mcts() : blackSpace(board::size_x * board::size_y),
-                                   whiteSpace(board::size_x * board::size_y) {
+    Mcts() : root(nullptr),
+        blackSpace(board::size_x * board::size_y),
+        whiteSpace(board::size_x * board::size_y) {
         srand(time(NULL));
         engine.seed(rand() % 100000);
         for (int i = 0; i < (int)blackSpace.size(); i++)
@@ -42,7 +43,18 @@ public:
     }
 
     void setupRoot(const board& b) {
-        root = new Node(b);
+        if (root == nullptr) {
+            root = new Node(b);
+        } else {
+            Node* target = nullptr;
+            for (int i = 0; i < (int)root->childs.size(); i++) {
+                if (root->childs[i]->position == b)
+                    target = root->childs[i];
+            }
+            if (target == nullptr)
+                std::cerr << "setupRoot error" << std::endl;
+            removeNonsenseNode(target);
+        }
     }
 
     void resetMcts(Node* node=nullptr) {
@@ -59,6 +71,9 @@ public:
     }
 
     action::place chooseAction() {
+        for (int i = 0; i < (int)root->childs.size(); i++)
+            std::cout << root->childs[i]->visitCount << " ";
+        std::cout << std::endl;
         if (root->childs.empty())
             return action::place(0, who);
         int bestCount = 0;
@@ -69,10 +84,12 @@ public:
                 bestNode = root->childs[i];
             }
         }
-        return findActionByNextBoard(bestNode->position);
+        action::place move = findActionByNextBoard(bestNode->position);
+        removeNonsenseNode(bestNode);
+        return move;
     }
 
-private:  // After testing, it should be private
+public:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
             int result = simulate(node->position, isOpponent);
@@ -172,13 +189,22 @@ private:  // After testing, it should be private
         exit(0);  // Error with call
     }
 
+    void removeNonsenseNode(Node* except) {
+        for (int i = 0; i < (int)root->childs.size(); i++) {
+            if (root->childs[i] != except)
+                resetMcts(root->childs[i]);
+        }
+        delete root;
+        root = except;
+    }
+
     std::string appendPath(std::string path, const action::place& move) {
         std::string moveCode = std::to_string(move.position().x) + std::to_string(move.position().y);
         return path + "_" + moveCode;
     }
 
-private:
     Node* root;
+private:
     std::vector<action::place> blackSpace;
     std::vector<action::place> whiteSpace;
     board::piece_type who;
