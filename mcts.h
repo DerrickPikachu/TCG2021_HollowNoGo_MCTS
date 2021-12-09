@@ -89,7 +89,7 @@ public:
         return move;
     }
 
-public:  // After testing, it should be private
+private:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
             int result = simulate(node->position, isOpponent);
@@ -203,8 +203,8 @@ public:  // After testing, it should be private
         return path + "_" + moveCode;
     }
 
-    Node* root;
 private:
+    Node* root;
     std::vector<action::place> blackSpace;
     std::vector<action::place> whiteSpace;
     board::piece_type who;
