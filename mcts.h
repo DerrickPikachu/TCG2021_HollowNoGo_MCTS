@@ -174,8 +174,8 @@ private:  // After testing, it should be private
 
     float uct(Node& node, int parentVisitCount) {
         if (node.visitCount == 0) return 10000.0;
-        float exploitation = (float)node.wins / (float)(node.visitCount + 1);
-        float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
+        float exploitation = (float)node.wins / (float)(node.visitCount);
+        float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount));
         return exploitation + exploreC * exploration;
     }
 
