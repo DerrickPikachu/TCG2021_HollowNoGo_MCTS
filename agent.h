@@ -84,6 +84,7 @@ public:
 		for (size_t i = 0; i < space.size(); i++)
 			space[i] = action::place(i, who);
 		mcts.setWho(who);
+		mcts.setUctType(meta["uct"]);
 	}
 
 	virtual action take_action(const board& state) {
