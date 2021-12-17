@@ -41,6 +41,10 @@ public:
         who = type;
     }
 
+    void setUctType(std::string type) {
+        uctType = type;
+    }
+
     void setupRoot(const board& b) {
         root = new Node(b);
     }
@@ -80,7 +84,7 @@ private:  // After testing, it should be private
             update(node, result);
             return result;
         } else {
-            Node* nextNode = select(node);
+            Node* nextNode = select(node, isOpponent);
 //            std::cout << nextNode->position << std::endl;
             int result = traverse(nextNode, !isOpponent);
             update(node, result);
@@ -88,11 +92,11 @@ private:  // After testing, it should be private
         }
     }
 
-    Node* select(Node* node) {
+    Node* select(Node* node, bool isOpponent) {
         float bestScore = 0;
         std::vector<Node*> nextNodes;
         for (Node* child : node->childs) {
-            float score = uct(*child, node->visitCount);
+            float score = uct(*child, node->visitCount, isOpponent);
             if (bestScore < score) {
                 bestScore = score;
                 nextNodes.clear();
@@ -154,9 +158,10 @@ private:  // After testing, it should be private
         return (!isOpponent && who == board::black) || (isOpponent && who == board::white);
     }
 
-    float uct(Node& node, int parentVisitCount) {
+    float uct(Node& node, int parentVisitCount, bool isOpponent) {
         float c = 1.5;
-        float exploitation = (float)node.wins / (float)(node.visitCount + 1);
+        float winRate = (float)node.wins / (float)(node.visitCount + 1);
+        float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : winRate;
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
         return exploitation + c * exploration;
     }
@@ -183,6 +188,7 @@ private:
     std::vector<action::place> whiteSpace;
     board::piece_type who;
     std::default_random_engine engine;
+    std::string uctType;
 };
 
 
