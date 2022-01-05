@@ -94,23 +94,20 @@ private:  // After testing, it should be private
 
     Node* select(Node* node, bool isOpponent) {
         float bestScore = 0;
-        std::vector<Node*> nextNodes;
+        Node* nextNode = NULL;
         for (Node* child : node->childs) {
             float score = uct(*child, node->visitCount, isOpponent);
             if (bestScore < score) {
                 bestScore = score;
-                nextNodes.clear();
-                nextNodes.push_back(child);
-            } else if (bestScore == score) {
-                nextNodes.push_back(child);
+                nextNode = child;
             }
         }
 //        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
-        if (nextNodes.empty()) {
+        if (nextNode == NULL) {
             std::cerr << "select error" << std::endl;
             exit(0);
         }
-        return nextNodes[0];
+        return nextNode;
     }
 
     int simulate(const board& position, bool isOpponent) {
