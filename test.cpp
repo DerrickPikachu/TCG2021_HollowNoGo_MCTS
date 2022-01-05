@@ -54,13 +54,23 @@
 //    }
 //}
 
-int main() {
+void testRandom() {
     std::uniform_int_distribution<int> uniform(0, 10);
 //    std::random_device dev;
     std::default_random_engine engine(time(0));
     for (int i = 0; i < 20; i++) {
         std::cout << uniform(engine) << " ";
     }
-    return 0;
+}
+
+int main() {
+    board testBoard;
+    Mcts mcts(board::black);
+    mcts.setupRoot(testBoard);
+    bool result = mcts.simulate(testBoard, false);
+    if (result)
+        std::cout << "black win" << std::endl;
+    else
+        std::cout << "black lose" << std::endl;
 }
 

@@ -105,7 +105,7 @@ private:  // After testing, it should be private
                 nextNodes.push_back(child);
             }
         }
-        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
+//        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
         if (nextNodes.empty()) {
             std::cerr << "select error" << std::endl;
             exit(0);
@@ -133,6 +133,7 @@ private:  // After testing, it should be private
                 break;
             } else {
                 temSpace[i].apply(curPosition);
+//                std::cout << curPosition << std::endl;
             }
         }
         return isOpponent;
@@ -140,7 +141,8 @@ private:  // After testing, it should be private
 
     void expand(Node* node, bool isOpponent) {
         std::vector<Node*> childs;
-        std::vector<action::place>& nextSpace = (isBlackTurn(isOpponent)) ? blackSpace : whiteSpace;
+        std::vector<action::place> nextSpace = (isBlackTurn(isOpponent)) ? blackSpace : whiteSpace;
+        std::shuffle(nextSpace.begin(), nextSpace.end(), engine);
         for (action::place& move : nextSpace) {
             board curPosition = node->position;
             if (move.apply(curPosition) == board::legal)
