@@ -102,7 +102,6 @@ private:  // After testing, it should be private
                 nextNode = child;
             }
         }
-//        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
         if (nextNode == NULL) {
             std::cerr << "select error" << std::endl;
             exit(0);
@@ -170,6 +169,7 @@ private:  // After testing, it should be private
     }
 
     float uct(Node& node, int parentVisitCount, bool isOpponent) {
+        if (node.visitCount == 0) return 10000.0;
         float c = 1.5;
         float winRate = (float)node.wins / (float)(node.visitCount + 1);
         float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : winRate;
