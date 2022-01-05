@@ -116,12 +116,24 @@ private:  // After testing, it should be private
     int simulate(const board& position, bool isOpponent) {
         std::string test;
         board curPosition = position;
-        action::place randomMove = getRandomAction(curPosition, isOpponent);
-        while (randomMove.apply(curPosition) == board::legal) {
-//            std::cout << curPosition << std::endl;
-//            std::cin >> test;
-            isOpponent = !isOpponent;
-            randomMove = getRandomAction(curPosition, isOpponent);
+        std::vector<action::place> curSpace = (isBlackTurn(isOpponent))? blackSpace : whiteSpace;
+        std::vector<action::place> oppSpace = (isBlackTurn(isOpponent))? whiteSpace : blackSpace;
+        std::shuffle(curSpace.begin(), curSpace.end(), engine);
+        std::shuffle(oppSpace.begin(), oppSpace.end(), engine);
+        bool isCurTurn = true;
+        for (;; isCurTurn = !isCurTurn, isOpponent = !isOpponent) {
+            std::vector<action::place>& temSpace = (isCurTurn)? curSpace : oppSpace;
+            int i = 0;
+            for (; i < (int)temSpace.size(); i++) {
+                board temPosition = curPosition;
+                if (temSpace[i].apply(temPosition) == board::legal)
+                    break;
+            }
+            if (i == (int)temSpace.size()) {
+                break;
+            } else {
+                temSpace[i].apply(curPosition);
+            }
         }
         return isOpponent;
     }
