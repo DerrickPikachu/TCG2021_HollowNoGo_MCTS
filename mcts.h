@@ -139,7 +139,8 @@ public:  // After testing, it should be private
         for (size_t i = 0; i < 81; i++) {
             assert(curPosition.place(copyActions[i]) != board::legal);
         }
-        return static_cast<board::piece_type>(3 - curPosition.info().who_take_turns) == who;
+//        return static_cast<board::piece_type>(3 - curPosition.info().who_take_turns) == who;
+        return isOpponent;
     }
 
     void expand(Node* node, bool isOpponent) {
