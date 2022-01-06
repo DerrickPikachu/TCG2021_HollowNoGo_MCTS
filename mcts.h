@@ -13,6 +13,7 @@
 #include <random>
 #include <ctime>
 #include <stack>
+#include <utility>
 
 class Mcts {
 private:
@@ -20,8 +21,18 @@ private:
         int visitCount;
         int wins;
         board position;
+        std::vector<board::point> legal;
         std::vector<Node*> childs;
-        Node(board b) : visitCount(0), wins(0), position(b) {}
+        Node(board b, std::vector<board::point> actions, std::default_random_engine& engine) :
+            visitCount(0), wins(0), position(b) {
+            legal.reserve(actions.size());
+            std::shuffle(actions.begin(), actions.end(), engine);
+            for (int i = 0; i < (int)actions.size(); i++) {
+                board tem = b;
+                if (tem.place(actions[i]) == board::legal)
+                    legal.push_back(actions[i]);
+            }
+        }
     };
 
 public:
@@ -46,7 +57,7 @@ public:
     }
 
     void setupRoot(const board& b) {
-        root = new Node(b);
+        root = new Node(b, actions, engine);
     }
 
     void resetMcts(Node* node=nullptr) {
@@ -68,25 +79,33 @@ public:
         int bestCount = 0;
         Node* bestNode = root->childs[0];
         for (int i = 0; i < (int)root->childs.size(); i++) {
+//            std::cout << root->childs[i]->visitCount << " ";
             if (bestCount < root->childs[i]->visitCount) {
                 bestCount = root->childs[i]->visitCount;
                 bestNode = root->childs[i];
             }
         }
+//        std::cout << std::endl;
         return findActionByNextBoard(bestNode->position);
     }
 
 private:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
-        if (node->childs.empty()) {  // expand and simulate
-            int result = simulate(node->position, isOpponent);
-            expand(node, isOpponent);
+        if (!node->legal.empty()) {
+            Node* leaf = expand(node, isOpponent);
+            int result = simulate(leaf->position, !isOpponent);
+            update(leaf, result);
             update(node, result);
             return result;
         } else {
-            Node* nextNode = select(node, isOpponent);
+            int result;
+            if (node->childs.empty()) {  //Terminal node
+                result = simulate(node->position, isOpponent);
+            } else {
+                Node* nextNode = select(node, isOpponent);
+                result = traverse(nextNode, !isOpponent);
+            }
 //            std::cout << nextNode->position << std::endl;
-            int result = traverse(nextNode, !isOpponent);
             update(node, result);
             return result;
         }
@@ -95,6 +114,7 @@ private:  // After testing, it should be private
     Node* select(Node* node, bool isOpponent) {
         float bestScore = 0;
         Node* nextNode = NULL;
+//        std::cout << node->childs.size() << std::endl;
         for (Node* child : node->childs) {
             float score = uct(*child, node->visitCount, isOpponent);
             if (bestScore < score) {
@@ -132,16 +152,14 @@ private:  // After testing, it should be private
         return isOpponent;
     }
 
-    void expand(Node* node, bool isOpponent) {
-        std::vector<Node*> childs;
-        std::vector<board::point> copyActions = actions;
-        std::shuffle(copyActions.begin(), copyActions.end(), engine);
-        for (board::point& move : copyActions) {
-            board curPosition = node->position;
-            if (curPosition.place(move) == board::legal)
-                childs.push_back(new Node(curPosition));
-        }
-        node->childs = childs;
+    Node* expand(Node* node, bool isOpponent) {
+        board::point move = node->legal.back();
+        node->legal.pop_back();
+        board tem = node->position;
+        tem.place(move);
+        Node* leaf = new Node(tem, actions, engine);
+        node->childs.push_back(leaf);
+        return leaf;
     }
 
     void update(Node* node, int result) {
@@ -149,25 +167,13 @@ private:  // After testing, it should be private
         node->wins += result;
     }
 
-//    board::point getRandomAction(const board& position, bool isOpponent) {
-//        std::vector<board::point> copyActions = actions;
-//        std::shuffle(copyActions.begin(), copyActions.end(), engine);
-//        for (board::point& move : copyActions) {
-//            board nextBoard = position;
-//            if (nextBoard.place(move) == board::legal) {
-//                return move;
-//            }
-//        }
-//        return copyActions[0];
-//    }
-
     bool isBlackTurn(bool isOpponent) {
         return (!isOpponent && who == board::black) || (isOpponent && who == board::white);
     }
 
     float uct(Node& node, int parentVisitCount, bool isOpponent) {
         if (node.visitCount == 0) return 10000.0;
-        float c = 1.5;
+        float c = 0.5;
         float winRate = (float)node.wins / (float)(node.visitCount + 1);
         float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : winRate;
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
