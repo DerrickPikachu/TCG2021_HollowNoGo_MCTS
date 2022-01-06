@@ -114,7 +114,7 @@ private:  // After testing, it should be private
     Node* select(Node* node, bool isOpponent) {
         float bestScore = 0;
         Node* nextNode = NULL;
-//        std::cout << node->childs.size() << std::endl;
+        if (node->childs.empty())  std::cout << "child is empty" << std::endl;
         for (Node* child : node->childs) {
             float score = uct(*child, node->visitCount, isOpponent);
             if (bestScore < score) {
