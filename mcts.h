@@ -124,15 +124,9 @@ public:  // After testing, it should be private
         for (int i = 0; i < amountOfActions; i++) {
             copyActions.push_back(board::point(i));
         }
-//        std::cout << copyActions.size() << std::endl;
         std::shuffle(copyActions.begin(), copyActions.end(), engine);
         for (size_t front = 0, back = copyActions.size(); back != 0;) {
             if (curPosition.place(copyActions[back-1]) == board::legal) {
-//                if (isOpponent)
-//                    std::cout << "white: " << std::endl;
-//                else
-//                    std::cout << "black: " << std::endl;
-//                std::cout << curPosition << std::endl;
                 back--;
                 front = 0;
                 isOpponent = !isOpponent;
@@ -142,7 +136,7 @@ public:  // After testing, it should be private
                 back = 0;
             }
         }
-        for (size_t i = 0; i < 80; i++) {
+        for (size_t i = 0; i < 81; i++) {
             assert(curPosition.place(copyActions[i]) != board::legal);
         }
         return static_cast<board::piece_type>(3 - curPosition.info().who_take_turns) == who;
