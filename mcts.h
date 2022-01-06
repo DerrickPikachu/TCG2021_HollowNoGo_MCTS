@@ -127,10 +127,13 @@ private:  // After testing, it should be private
         if (nextNode == NULL) {
             std::cerr << "select error" << std::endl;
             std::cerr << "child size: " << node->childs.size() << std::endl;
-            for(float& score : uctScore) {
-                std::cerr << score << " ";
-            }
-            std::cerr << std::endl << "uct score end" << std::endl;
+            std::cerr << "parent visit count: " << node->visitCount << std::endl;
+            std::cerr << "child visit count: " << node->childs[0]->visitCount << std::endl;
+            std::cerr << "child wins: " << node->childs[0]->wins << std::endl;
+//            for(float& score : uctScore) {
+//                std::cerr << score << " ";
+//            }
+//            std::cerr << std::endl << "uct score end" << std::endl;
             exit(0);
         }
         return nextNode;
