@@ -77,36 +77,19 @@ public:
     }
 
 private:  // After testing, it should be private
-//    int traverse(Node* node, bool isOpponent=false) {
-//        if (node->childs.empty()) {  // expand and simulate
-//            int result = simulate(node->position, isOpponent);
-//            expand(node, isOpponent);
-//            update(node, result);
-//            return result;
-//        } else {
-//            Node* nextNode = select(node, isOpponent);
-////            std::cout << nextNode->position << std::endl;
-//            int result = traverse(nextNode, !isOpponent);
-//            update(node, result);
-//            return result;
-//        }
-//    }
-
-    int traverse(Node* node) {
-        bool isOpponent = false;
-        std::stack<Node*> nodes;
-        nodes.push(root);
-        while (!nodes.top()->childs.empty()) {
-            nodes.push(select(nodes.top(), isOpponent));
-            isOpponent = !isOpponent;
+    int traverse(Node* node, bool isOpponent=false) {
+        if (node->childs.empty()) {  // expand and simulate
+            int result = simulate(node->position, isOpponent);
+            expand(node, isOpponent);
+            update(node, result);
+            return result;
+        } else {
+            Node* nextNode = select(node, isOpponent);
+//            std::cout << nextNode->position << std::endl;
+            int result = traverse(nextNode, !isOpponent);
+            update(node, result);
+            return result;
         }
-        int result = simulate(nodes.top()->position, isOpponent);
-        expand(nodes.top(), isOpponent);
-        while (!nodes.empty()) {
-            update(nodes.top(), result);
-            nodes.pop();
-        }
-        return result;
     }
 
     Node* select(Node* node, bool isOpponent) {
