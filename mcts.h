@@ -122,11 +122,11 @@ public:  // After testing, it should be private
         std::shuffle(copyActions.begin(), copyActions.end(), engine);
         for (size_t front = 0, back = copyActions.size(); back != 0;) {
             if (curPosition.place(copyActions[back-1]) == board::legal) {
-                if (isOpponent)
-                    std::cout << "white: " << std::endl;
-                else
-                    std::cout << "black: " << std::endl;
-                std::cout << curPosition << std::endl;
+//                if (isOpponent)
+//                    std::cout << "white: " << std::endl;
+//                else
+//                    std::cout << "black: " << std::endl;
+//                std::cout << curPosition << std::endl;
                 back--;
                 front = 0;
                 isOpponent = !isOpponent;
