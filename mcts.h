@@ -115,17 +115,21 @@ private:  // After testing, it should be private
         float bestScore = 0;
         Node* nextNode = NULL;
         if (node->childs.empty())  std::cout << "child is empty" << std::endl;
+        std::vector<float> uctScore;
         for (Node* child : node->childs) {
             float score = uct(*child, node->visitCount, isOpponent);
-            std::cout << score << " ";
+            uctScore.push_back(score);
             if (bestScore < score) {
                 bestScore = score;
                 nextNode = child;
             }
         }
-        std::cout << std::endl;
         if (nextNode == NULL) {
             std::cerr << "select error" << std::endl;
+            for(float& score : uctScore) {
+                std::cout << score << " ";
+            }
+            std::cout << std::endl << "uct score end" << std::endl;
             exit(0);
         }
         return nextNode;
