@@ -122,9 +122,7 @@ public:  // After testing, it should be private
         int amountOfActions = board::size_x * board::size_y;
         copyActions.reserve(amountOfActions);
         for (int i = 0; i < amountOfActions; i++) {
-            board::point move(i);
-            if (curPosition[move.x][move.y] == board::empty)
-                copyActions.push_back(move);
+            copyActions.push_back(board::point(i));
         }
 //        std::cout << copyActions.size() << std::endl;
         std::shuffle(copyActions.begin(), copyActions.end(), engine);
@@ -144,7 +142,7 @@ public:  // After testing, it should be private
                 back = 0;
             }
         }
-        for (size_t i = 0; i < 81; i++) {
+        for (size_t i = 0; i < 80; i++) {
             assert(curPosition.place(copyActions[i]) != board::legal);
         }
         return static_cast<board::piece_type>(3 - curPosition.info().who_take_turns) == who;
