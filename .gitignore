@@ -6,3 +6,5 @@ nogo.exe
 run-gogui-server.sh
 run-gogui-twogtp.sh
 nogo-judge
+/gogui-1.4.9
+usage.txt
