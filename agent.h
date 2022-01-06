@@ -108,9 +108,9 @@ public:
 	action mctsAction(const board& state) {
 	    mcts.setupRoot(state);
 	    mcts.search(int(meta["simulation"]));
-	    action::place move = mcts.chooseAction();
+	    board::point move = mcts.chooseAction();
 	    mcts.resetMcts();
-	    return move;
+	    return action::place(move, who);
 	}
 
 private:
