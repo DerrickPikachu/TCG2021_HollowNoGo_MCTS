@@ -78,7 +78,7 @@ public:
         return findActionByNextBoard(bestNode->position);
     }
 
-private:  // After testing, it should be private
+public:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
             int result = simulate(node->position, isOpponent);
@@ -120,12 +120,13 @@ private:  // After testing, it should be private
         std::vector<board::point> copyActions = actions;
         std::shuffle(copyActions.begin(), copyActions.end(), engine);
         for (size_t front = 0, back = copyActions.size(); back != 0;) {
-            if (curPosition.place(copyActions[back]) == board::legal) {
+            if (curPosition.place(copyActions[back-1]) == board::legal) {
+//                std::cout << curPosition << std::endl;
                 back--;
                 front = 0;
                 isOpponent = !isOpponent;
             } else if (front < back) {
-                std::swap(copyActions[front++], copyActions[back]);
+                std::swap(copyActions[front++], copyActions[back-1]);
             } else {
                 back = 0;
             }
@@ -195,7 +196,7 @@ private:  // After testing, it should be private
         return path + "_" + moveCode;
     }
 
-private:
+public:
     Node* root;
     std::vector<board::point> actions;
     board::piece_type who;
