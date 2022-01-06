@@ -118,7 +118,12 @@ public:  // After testing, it should be private
 
     int simulate(const board& position, bool isOpponent) {
         board curPosition = position;
-        std::vector<board::point> copyActions = actions;
+        std::vector<board::point> copyActions;
+        int amountOfActions = board::size_x * board::size_y;
+        copyActions.reserve(amountOfActions);
+        for (int i = 0; i < amountOfActions; i++) {
+            copyActions.push_back(board::point(i));
+        }
         std::shuffle(copyActions.begin(), copyActions.end(), engine);
         for (size_t front = 0, back = copyActions.size(); back != 0;) {
             if (curPosition.place(copyActions[back-1]) == board::legal) {
@@ -136,7 +141,7 @@ public:  // After testing, it should be private
                 back = 0;
             }
         }
-        for (size_t i = 0; i < copyActions.size(); i++) {
+        for (size_t i = 0; i < 80; i++) {
             assert(curPosition.place(copyActions[i]) != board::legal);
         }
         return static_cast<board::piece_type>(3 - curPosition.info().who_take_turns) == who;
