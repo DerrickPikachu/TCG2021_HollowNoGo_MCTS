@@ -58,6 +58,8 @@ public:
 
     void setupRoot(const board& b) {
         root = new Node(b, actions, engine);
+        int result = simulate(root->position, false);
+        update(root, result);
     }
 
     void resetMcts(Node* node=nullptr) {
