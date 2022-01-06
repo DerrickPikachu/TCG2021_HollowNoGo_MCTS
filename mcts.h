@@ -63,12 +63,11 @@ public:
     }
 
     void resetMcts(Node* node=nullptr) {
-        root = NULL;
-//        if (node == nullptr)
-//            node = root;
-//        for (int i = 0; i < (int)node->childs.size(); i++)
-//            resetMcts(node->childs[i]);
-//        delete node;
+        if (node == nullptr)
+            node = root;
+        for (int i = 0; i < (int)node->childs.size(); i++)
+            resetMcts(node->childs[i]);
+        delete node;
     }
 
     void search(int timesOfMcts) {
@@ -132,23 +131,18 @@ private:  // After testing, it should be private
     }
 
     int simulate(const board& position, bool isOpponent) {
-        std::string test;
         board curPosition = position;
         std::vector<board::point> copyActions = actions;
         std::shuffle(actions.begin(), actions.end(), engine);
-        bool isCurTurn = true;
-        for (;; isCurTurn = !isCurTurn, isOpponent = !isOpponent) {
-            int i = 0;
-            for (; i < (int)copyActions.size(); i++) {
-                board temPosition = curPosition;
-                if (temPosition.place(copyActions[i]) == board::legal)
-                    break;
-            }
-            if (i == (int)copyActions.size()) {
-                break;
+        for (size_t front = 0, back = copyActions.size(); back != 0;) {
+            if (curPosition.place(copyActions[back]) == board::legal) {
+                back--;
+                front = 0;
+                isOpponent = !isOpponent;
+            } else if (front < back) {
+                std::swap(copyActions[front++], copyActions[back]);
             } else {
-                curPosition.place(copyActions[i]);
-//                std::cout << curPosition << std::endl;
+                back = 0;
             }
         }
         return isOpponent;
