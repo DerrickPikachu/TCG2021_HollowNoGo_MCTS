@@ -12,6 +12,7 @@
 #include <cmath>
 #include <random>
 #include <ctime>
+#include <cassert>
 
 class Mcts {
 private:
@@ -131,11 +132,9 @@ public:  // After testing, it should be private
                 back = 0;
             }
         }
-//        board::point randomMove = getRandomAction(curPosition, isOpponent);
-//        while (curPosition.place(randomMove) == board::legal) {
-//            isOpponent = !isOpponent;
-//            randomMove = getRandomAction(curPosition, isOpponent);
-//        }
+        for (size_t i = 0; i < copyActions.size(); i++) {
+            assert(curPosition.place(copyActions[i]) != board::legal);
+        }
         return isOpponent;
     }
 

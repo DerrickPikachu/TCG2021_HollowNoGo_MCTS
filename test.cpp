@@ -64,7 +64,7 @@ void testRandom() {
 
 int main() {
     Mcts mcts(board::black);
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 5; i++) {
         board testBoard;
         bool result = mcts.simulate(testBoard, false);
         if (result)
