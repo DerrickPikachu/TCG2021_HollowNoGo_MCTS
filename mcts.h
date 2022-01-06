@@ -169,7 +169,7 @@ private:  // After testing, it should be private
 
     float uct(Node& node, int parentVisitCount, bool isOpponent) {
         if (node.visitCount == 0) return 10000.0;
-        float c = 0.5;
+        float c = 1.5;
         float winRate = (float)node.wins / (float)(node.visitCount + 1);
         float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : winRate;
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
