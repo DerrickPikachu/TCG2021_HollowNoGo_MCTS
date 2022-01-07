@@ -162,9 +162,9 @@ public:  // After testing, it should be private
         }
         int i = 0;
         while (i < n) {
-            std::uniform_int_distribution<int> uniform(i, n - 1);
-            int randomIndex = uniform(engine);
-//            int randomIndex = (rand() % (n - i)) + i;
+//            std::uniform_int_distribution<int> uniform(i, n - 1);
+//            int randomIndex = uniform(engine);
+            int randomIndex = (rand() % (n - i)) + i;
             if (position.place(empty[randomIndex]) == board::legal) {
                 std::swap(empty[randomIndex], empty[n-1]);
                 return empty[n-1];
@@ -174,15 +174,6 @@ public:  // After testing, it should be private
             }
         }
         return empty[0];
-//        std::vector<board::point> temSpace = actions;
-//        std::shuffle(temSpace.begin(), temSpace.end(), engine);
-//        for (board::point& move : temSpace) {
-//            board nextBoard = position;
-//            if (nextBoard.place(move) == board::legal) {
-//                return move;
-//            }
-//        }
-//        return temSpace[0];
     }
 
     bool isBlackTurn(bool isOpponent) {
