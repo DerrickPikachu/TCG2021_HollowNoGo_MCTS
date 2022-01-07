@@ -32,10 +32,6 @@ public:
         for (int i = 0; i < actionSize; i++)
             actions.push_back(board::point(i));
         // TODO: Need test
-//        for (int i = 0; i < (int)blackSpace.size(); i++)
-//            blackSpace[i] = action::place(i, board::black);
-//        for (int i = 0; i < (int)whiteSpace.size(); i++)
-//            whiteSpace[i] = action::place(i, board::white);
     }
     Mcts(board::piece_type type) : Mcts() {
         setWho(type);
@@ -66,10 +62,8 @@ public:
             traverse(root);
     }
 
-//    action::place chooseAction() {
     board::point chooseAction() {
         if (root->childs.empty())
-//            return action::place(0, who);
             return board::point(0);
         int bestCount = 0;
         Node* bestNode = root->childs[0];
@@ -122,12 +116,8 @@ private:  // After testing, it should be private
     int simulate(const board& position, bool isOpponent) {
         std::string test;
         board curPosition = position;
-//        action::place randomMove = getRandomAction(curPosition, isOpponent);
         board::point randomMove = getRandomAction(curPosition, isOpponent);
-//        while (randomMove.apply(curPosition) == board::legal) {
         while (curPosition.place(randomMove) == board::legal) {
-//            std::cout << curPosition << std::endl;
-//            std::cin >> test;
             isOpponent = !isOpponent;
             randomMove = getRandomAction(curPosition, isOpponent);
         }
@@ -136,12 +126,9 @@ private:  // After testing, it should be private
 
     void expand(Node* node, bool isOpponent) {
         std::vector<Node*> childs;
-//        std::vector<action::place>& nextSpace = (isBlackTurn(isOpponent)) ? blackSpace : whiteSpace;
         std::vector<board::point> copyActions = actions;
-//        for (action::place& move : nextSpace) {
         for (board::point& move : copyActions) {
             board curPosition = node->position;
-//            if (move.apply(curPosition) == board::legal)
             if (curPosition.place(move) == board::legal)
                 childs.push_back(new Node(curPosition));
         }
@@ -153,12 +140,9 @@ private:  // After testing, it should be private
         node->wins += result;
     }
 
-//    action::place getRandomAction(const board& position, bool isOpponent) {
     board::point getRandomAction(const board& position, bool isOpponent) {
-//        std::vector<action::place> temSpace = (isBlackTurn(isOpponent))? blackSpace : whiteSpace;
         std::vector<board::point> temSpace = actions;
         std::shuffle(temSpace.begin(), temSpace.end(), engine);
-//        for (action::place& move : temSpace) {
         for (board::point& move : temSpace) {
             board nextBoard = position;
             if (nextBoard.place(move) == board::legal) {
@@ -181,14 +165,10 @@ private:  // After testing, it should be private
         return exploitation + c * exploration;
     }
 
-//    action::place findActionByNextBoard(const board& nextBoard) {
     board::point findActionByNextBoard(const board& nextBoard) {
-//        std::vector<action::place>& temSpace = (who == board::black)? blackSpace : whiteSpace;
         std::vector<board::point> temSpace = actions;
-//        for (action::place& move : temSpace) {
         for (board::point& move : temSpace) {
             board position = root->position;
-//            if (move.apply(position) == board::legal && position == nextBoard)
             if (position.place(move) == board::legal && position == nextBoard)
                 return move;
         }
