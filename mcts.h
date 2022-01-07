@@ -202,7 +202,9 @@ private:  // After testing, it should be private
 //        std::cout << "win: " << node.wins << " count: " << node.visitCount
 //        << " rave win: " << node.raveWins << " rave count: " << node.raveCount << std::endl;
         if (node.visitCount == 0) return 10000.0;
-        float beta = sqrt(1 / (3 * parentVisitCount + 1));
+//        float beta = sqrt(1 / (3 * parentVisitCount + 1));
+        float beta = (float)node.raveCount /
+                ((float)node.visitCount + (float)node.raveCount + 4 * (float)node.visitCount * (float)node.raveCount * 0.025 * 0.025);
         float winRate = (float)node.wins / (float)(node.visitCount + 1);
         float raveWinRate = (float)node.raveWins / (float)(node.raveCount + 1);
         // TODO: Need to think about anti uct
