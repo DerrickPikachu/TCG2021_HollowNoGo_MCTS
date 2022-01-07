@@ -58,7 +58,8 @@ public:
         delete node;
     }
 
-    void search(int timesOfMcts) {
+    void search(int timesOfMcts, float constant) {
+        exploreC = constant;
         for (int i = 0; i < timesOfMcts; i++) {
             traverse(root);
         }
@@ -178,11 +179,10 @@ private:  // After testing, it should be private
 
     float uct(Node& node, int parentVisitCount, bool isOpponent) {
         if (node.visitCount == 0) return 10000.0;
-        float c = 1.5;
         float winRate = (float)node.wins / (float)(node.visitCount + 1);
         float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : winRate;
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
-        return exploitation + c * exploration;
+        return exploitation + exploreC * exploration;
     }
 
     board::point findActionByNextBoard(const board& nextBoard) {
@@ -203,6 +203,7 @@ private:  // After testing, it should be private
 
 private:
     Node* root;
+    float exploreC;
     std::vector<board::point> actions;
     board::piece_type who;
     std::default_random_engine engine;
