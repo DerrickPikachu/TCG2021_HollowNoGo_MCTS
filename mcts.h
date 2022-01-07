@@ -78,7 +78,7 @@ public:
         return findActionByNextBoard(bestNode->position);
     }
 
-public:  // After testing, it should be private
+private:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
             int result = simulate(node->position, isOpponent);
@@ -127,10 +127,6 @@ public:  // After testing, it should be private
         int n = emptyPoint.size();
         board::point randomMove = getRandomAction(curPosition, emptyPoint, n);
         while (curPosition.place(randomMove) == board::legal) {
-//            if (isOpponent)
-//                std::cout << "white: " << std::endl;
-//            else
-//                std::cout << "black: " << std::endl;
 //            std::cout << curPosition << std::endl;
             n--;
             isOpponent = !isOpponent;
@@ -162,9 +158,9 @@ public:  // After testing, it should be private
         }
         int i = 0;
         while (i < n) {
-//            std::uniform_int_distribution<int> uniform(i, n - 1);
-//            int randomIndex = uniform(engine);
-            int randomIndex = (rand() % (n - i)) + i;
+            std::uniform_int_distribution<int> uniform(i, n - 1);
+            int randomIndex = uniform(engine);
+//            int randomIndex = (rand() % (n - i)) + i;
             if (position.place(empty[randomIndex]) == board::legal) {
                 std::swap(empty[randomIndex], empty[n-1]);
                 return empty[n-1];
