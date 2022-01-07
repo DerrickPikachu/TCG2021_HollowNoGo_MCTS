@@ -107,7 +107,7 @@ private:  // After testing, it should be private
                 nextNodes.push_back(child);
             }
         }
-        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
+//        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
         if (nextNodes.empty()) {
             std::cerr << "select error" << std::endl;
             exit(0);
@@ -138,6 +138,7 @@ private:  // After testing, it should be private
     void expand(Node* node, bool isOpponent) {
         std::vector<Node*> childs;
         std::vector<board::point> copyActions = actions;
+        std::shuffle(copyActions.begin(), copyActions.end(), engine);
         for (board::point& move : copyActions) {
             board curPosition = node->position;
             if (curPosition.place(move) == board::legal)
