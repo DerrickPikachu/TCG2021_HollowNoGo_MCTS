@@ -24,7 +24,7 @@ private:
         board::point fromWhichMove;
         std::vector<Node*> mapActionToChild;
         std::vector<Node*> childs;
-        Node(board b) : visitCount(0), wins(0), position(b) {
+        Node(board b) : visitCount(0), wins(0), raveCount(0), raveWins(0), position(b) {
             mapActionToChild.resize(board::size_x * board::size_y, NULL);
         }
     };
@@ -33,8 +33,8 @@ public:
     Mcts() : uniform(0, board::size_x * board::size_y) {
         srand(time(NULL));
         engine.seed(rand() % 100000);
-
         int actionSize = board::size_x * board::size_y;
+        traverseHistory.resize(actionSize, 0);
         actions.reserve(actionSize);
         for (int i = 0; i < actionSize; i++)
             actions.push_back(board::point(i));
@@ -66,7 +66,9 @@ public:
 
     void search(int timesOfMcts) {
         for (int i = 0; i < timesOfMcts; i++) {
+//            std::cout << "start traverse" << std::endl;
             traverse(root);
+            cleanHistory();
         }
     }
 
@@ -92,9 +94,11 @@ private:  // After testing, it should be private
             update(node, result);
             return result;
         } else {
+//            std::cout << "next layer" << std::endl;
             Node* nextNode = select(node, isOpponent);
 //            std::cout << nextNode->position << std::endl;
             int result = traverse(nextNode, !isOpponent);
+            traverseHistory[nextNode->fromWhichMove.i] = 1;
             update(node, result);
             return result;
         }
@@ -160,6 +164,12 @@ private:  // After testing, it should be private
     void update(Node* node, int result) {
         node->visitCount++;
         node->wins += result;
+        for (int i = 0; i < (int)traverseHistory.size(); i++) {
+            if (traverseHistory[i] && node->mapActionToChild[i] != NULL) {
+                node->mapActionToChild[i]->raveCount++;
+                node->mapActionToChild[i]->raveWins += result;
+            }
+        }
     }
 
     board::point getRandomAction(board position, std::vector<board::point>& empty, int n) {
@@ -188,10 +198,15 @@ private:  // After testing, it should be private
     }
 
     float uct(Node& node, int parentVisitCount, bool isOpponent) {
+//        std::cout << "win: " << node.wins << " count: " << node.visitCount
+//        << " rave win: " << node.raveWins << " rave count: " << node.raveCount << std::endl;
         if (node.visitCount == 0) return 10000.0;
         float c = 1.5;
+        float b = 0.5;
         float winRate = (float)node.wins / (float)(node.visitCount + 1);
-        float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : winRate;
+        float raveWinRate = (float)node.raveWins / (float)(node.raveCount + 1);
+        // TODO: Need to think about anti uct
+        float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : (1 - b) * winRate + b * raveWinRate;
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
         return exploitation + c * exploration;
     }
@@ -212,9 +227,15 @@ private:  // After testing, it should be private
         return path + "_" + moveCode;
     }
 
+    void cleanHistory() {
+        for (int i = 0; i < (int)traverseHistory.size(); i++)
+            traverseHistory[i] = 0;
+    }
+
 private:
     Node* root;
     std::vector<board::point> actions;
+    std::vector<int> traverseHistory;
     board::piece_type who;
     std::default_random_engine engine;
     std::uniform_int_distribution<int> uniform;
