@@ -62,13 +62,27 @@ void testRand() {
         std::cout << (rand() % (back - front)) + front << std::endl;
 }
 
+void testSimulation() {
+//    board test;
+//    Mcts mcts(board::black);
+//    int result = mcts.simulate(test, false);
+//    if (result)
+//        std::cout << "black win" << std::endl;
+//    else
+//        std::cout << "white win" << std::endl;
+}
+
 int main() {
     board test;
-    Mcts mcts(board::black);
-    int result = mcts.simulate(test, false);
-    if (result)
-        std::cout << "black win" << std::endl;
-    else
-        std::cout << "white win" << std::endl;
+    Mcts mcts;
+    mcts.setUctType("normal");
+    mcts.setWho(board::black);
+    mcts.setupRoot(test);
+    mcts.search(1000, 0.5);
+    for (int i = 0; i < 81; i++)
+        std::cout << i << ": "<< mcts.getSimulationCount(i) << std::endl;
+    std::cout << "\n\n childs visit count" << std::endl;
+    for (int i = 0; i < mcts.root->childs.size(); i++)
+        std::cout << mcts.root->childs[i]->fromWhichMove.i << ": " << mcts.root->childs[i]->visitCount << std::endl;
 }
 

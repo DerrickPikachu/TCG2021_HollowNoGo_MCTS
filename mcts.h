@@ -19,8 +19,12 @@ private:
         int visitCount;
         int wins;
         board position;
+        board::point fromWhichMove;
+        std::vector<Node*> mapActionToChild;
         std::vector<Node*> childs;
-        Node(board b) : visitCount(0), wins(0), position(b) {}
+        Node(board b) : visitCount(0), wins(0), position(b) {
+            mapActionToChild.resize(board::size_x * board::size_y, NULL);
+        }
     };
 
 public:
@@ -79,6 +83,13 @@ public:
         return findActionByNextBoard(bestNode->position);
     }
 
+    int getSimulationCount(int actionIndex) {
+        if (root->mapActionToChild[actionIndex] == NULL)
+            return 0;
+        else
+            return root->mapActionToChild[actionIndex]->visitCount;
+    }
+
 private:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
         if (node->childs.empty()) {  // expand and simulate
@@ -108,7 +119,7 @@ private:  // After testing, it should be private
                 nextNodes.push_back(child);
             }
         }
-        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
+//        std::shuffle(nextNodes.begin(), nextNodes.end(), engine);
         if (nextNodes.empty()) {
             std::cerr << "select error" << std::endl;
             exit(0);
@@ -137,14 +148,19 @@ private:  // After testing, it should be private
     }
 
     void expand(Node* node, bool isOpponent) {
-        std::vector<Node*> childs;
+//        std::vector<Node*> childs;
         std::vector<board::point> copyActions = actions;
+        std::shuffle(copyActions.begin(), copyActions.end(), engine);
         for (board::point& move : copyActions) {
             board curPosition = node->position;
-            if (curPosition.place(move) == board::legal)
-                childs.push_back(new Node(curPosition));
+            if (curPosition.place(move) == board::legal) {
+                Node* newChild = new Node(curPosition);
+                newChild->fromWhichMove = move;
+                node->childs.push_back(newChild);
+                node->mapActionToChild[move.i] = newChild;
+            }
         }
-        node->childs = childs;
+//        node->childs = childs;
     }
 
     void update(Node* node, int result) {
@@ -201,7 +217,7 @@ private:  // After testing, it should be private
         return path + "_" + moveCode;
     }
 
-private:
+public:
     Node* root;
     float exploreC;
     std::vector<board::point> actions;
