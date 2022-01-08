@@ -18,6 +18,8 @@
 #include "action.h"
 #include "mcts.h"
 #include <fstream>
+#include <thread>
+#include <future>
 
 class agent {
 public:
@@ -74,7 +76,7 @@ protected:
 class player : public random_agent {
 public:
 	player(const std::string& args = "") : random_agent("name=random role=unknown " + args),
-		space(board::size_x * board::size_y), who(board::empty), mcts() {
+		space(board::size_x * board::size_y), who(board::empty) {
 		if (name().find_first_of("[]():; ") != std::string::npos)
 			throw std::invalid_argument("invalid name: " + name());
 		if (role() == "black") who = board::black;
@@ -83,8 +85,8 @@ public:
 			throw std::invalid_argument("invalid role: " + role());
 		for (size_t i = 0; i < space.size(); i++)
 			space[i] = action::place(i, who);
-		mcts.setWho(who);
-		mcts.setUctType(meta["uct"]);
+//		mcts.setWho(who);
+//		mcts.setUctType(meta["uct"]);
 	}
 
 	virtual action take_action(const board& state) {
@@ -106,15 +108,53 @@ public:
 	}
 
 	action mctsAction(const board& state) {
-	    mcts.setupRoot(state);
-	    mcts.search(int(meta["simulation"]), float(meta["explore"]));
-        board::point move = mcts.chooseAction();
-	    mcts.resetMcts();
-	    return action::place(move, who);
+        int parallel = int(meta["parallel"]);
+        int actionSize = board::size_x * board::size_y;
+        std::vector<std::vector<int>> simulationCount(parallel, std::vector<int>(actionSize));
+        std::vector<std::thread> threads;
+        for (int i = 0; i < parallel; i++) {
+            threads.push_back(std::thread(&player::runMcts, this, state, &simulationCount[i]));
+        }
+        for (int i = 0; i < parallel; i++) {
+            threads[i].join();
+        }
+        int bestCount = 0;
+        int bestMoveIndex = 0;
+//        int verify = 0;
+        for (int i = 0; i < actionSize; i++) {
+            int total = 0;
+            for (int j = 0; j < parallel; j++)
+                total += simulationCount[j][i];
+//            std::cerr << total << std::endl;
+//            verify += total;
+            if (bestCount < total) {
+                bestCount = total;
+                bestMoveIndex = i;
+            }
+        }
+        threads.clear();
+        simulationCount.clear();
+//        std::cout << "verify: " << verify << std::endl;
+        return action::place(board::point(bestMoveIndex), who);
+//	    mcts.setupRoot(state);
+//	    mcts.search(int(meta["simulation"]), float(meta["explore"]));
+//        board::point move = mcts.chooseAction();
+//	    mcts.resetMcts();
+//	    return action::place(move, who);
 	}
+
+    void runMcts(board state, std::vector<int>* counter) {
+        Mcts mcts;
+        mcts.setWho(who);
+        mcts.setUctType(meta["uct"]);
+        mcts.setupRoot(state);
+        mcts.search(int(meta["simulation"]), float(meta["explore"]));
+        for (int i = 0; i < (int)counter->size(); i++)
+            (*counter)[i] = mcts.getSimulationCount(i);
+        mcts.resetMcts();
+    }
 
 private:
 	std::vector<action::place> space;
 	board::piece_type who;
-	Mcts mcts;
 };
