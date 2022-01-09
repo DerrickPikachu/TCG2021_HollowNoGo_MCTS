@@ -109,26 +109,16 @@ public:
 	}
 
 	action mctsAction(const board& state) {
-	    double start = clock(), end;
         int parallel = int(meta["parallel"]);
         int actionSize = board::size_x * board::size_y;
         std::vector<Mcts> mcts(parallel);
         std::vector<std::thread> threads;
-        end = clock();
-        std::cout << "init section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
         for (int i = 0; i < parallel; i++) {
             threads.push_back(std::thread(&player::runMcts, this, state, &mcts[i]));
         }
-        end = clock();
-        std::cout << "thread generate section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
         for (int i = 0; i < parallel; i++) {
             threads[i].join();
         }
-        end = clock();
-        std::cout << "Mcts section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
         int bestCount = 0;
         int bestMoveIndex = 0;
         for (int i = 0; i < actionSize; i++) {
@@ -140,55 +130,14 @@ public:
                 bestMoveIndex = i;
             }
         }
-        end = clock();
-        std::cout << "choose best action section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
-//        for (int i = 0; i < (int)mcts.size(); i++) {
-//            mcts[i].resetMcts();
-//        }
-        end = clock();
-        std::cout << "mcts reset section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
-
-//        threads.clear();
-//        mcts.clear();
-//        end = clock();
-//        std::cout << "clean memory section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
         return action::place(board::point(bestMoveIndex), who);
 	}
 
     void runMcts(board state, Mcts* mcts) {
-	    double start = clock(), end;
-
-        end = clock();
-        std::cout << "mcts constructor end: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
-
         mcts->setWho(who);
         mcts->setUctType(meta["uct"]);
-        mcts->setupRoot(state);
-
-        end = clock();
-        std::cout << "mcts setup: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
-
-        mcts->search(int(meta["simulation"]), float(meta["explore"]));
-
-        end = clock();
-        std::cout << "mcts search: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-        start = end;
-
-//        for (int i = 0; i < (int)counter->size(); i++)
-//            (*counter)[i] = mcts.getSimulationCount(i);
-//
-//        end = clock();
-//        std::cout << "mcts find best action: " << (end - start) / CLOCKS_PER_SEC << std::endl;
-//        start = end;
-//
-//        mcts.resetMcts();
-//
-//        end = clock();
-//        std::cout << "mcts reset: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+//        mcts->setupRoot(state);
+        mcts->search(state, int(meta["simulation"]), float(meta["explore"]));
     }
 
 private:

@@ -41,7 +41,6 @@ public:
     Mcts() : uniform(0, board::size_x * board::size_y) {
         srand(time(NULL));
         engine.seed(rand() % 100000);
-
         int actionSize = board::size_x * board::size_y;
         actions.reserve(actionSize);
         for (int i = 0; i < actionSize; i++)
@@ -63,12 +62,6 @@ public:
     void setupRoot(const board& b) {
         nodePool.push_back(Node(b, engine));
         root = &nodePool.back();
-//        std::cout << "root visitCount: " << root->visitCount << std::endl;
-//        std::cout << "root wins: " << root->wins << std::endl;
-//        std::cout << "root position: \n" << root->position << std::endl;
-//        std::cout << "root from which move: " << root->fromWhichMove.i << std::endl;
-//        std::cout << "root mapActionToChild size: " << root->mapActionToChild.size() << std::endl;
-//        std::cout << "root childs size: " << root->childs.size() << std::endl;
         int result = simulate(root->position, false);
         update(root, result);
     }
@@ -81,8 +74,13 @@ public:
         delete node;
     }
 
-    void search(int timesOfMcts, float constant) {
+    void search(const board& b, int timesOfMcts, float constant) {
+        nodePool.reserve(timesOfMcts + 2);
+        nodePool.push_back(Node(b, engine));
+        root = &nodePool.back();
         exploreC = constant;
+        // TODO: setup root here
+//        nodePool.reserve(timesOfMcts + 2);
         for (int i = 0; i < timesOfMcts; i++) {
             traverse(root);
         }
@@ -177,16 +175,11 @@ private:  // After testing, it should be private
         board::point move = node->legal.back();
         node->legal.pop_back();
         curPosition.place(move);
-        node->childs.push_back(new Node(curPosition, engine));
+        nodePool.push_back(Node(curPosition, engine));
+        nodePool.back().fromWhichMove = move;
+        node->mapActionToChild[move.i] = &nodePool.back();
+        node->childs.push_back(&nodePool.back());
         return node->childs.back();
-//        std::vector<Node*> childs;
-//        std::vector<board::point> copyActions = actions;
-//        for (board::point& move : copyActions) {
-//            board curPosition = node->position;
-//            if (curPosition.place(move) == board::legal)
-//                childs.push_back(new Node(curPosition));
-//        }
-//        node->childs = childs;
     }
 
     void update(Node* node, int result) {
