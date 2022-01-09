@@ -20,6 +20,7 @@
 #include <fstream>
 #include <thread>
 #include <future>
+#include <ctime>
 
 class agent {
 public:
@@ -108,50 +109,86 @@ public:
 	}
 
 	action mctsAction(const board& state) {
+	    double start = clock(), end;
         int parallel = int(meta["parallel"]);
         int actionSize = board::size_x * board::size_y;
-        std::vector<std::vector<int>> simulationCount(parallel, std::vector<int>(actionSize));
+        std::vector<Mcts> mcts(parallel);
         std::vector<std::thread> threads;
+        end = clock();
+        std::cout << "init section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
         for (int i = 0; i < parallel; i++) {
-            threads.push_back(std::thread(&player::runMcts, this, state, &simulationCount[i]));
+            threads.push_back(std::thread(&player::runMcts, this, state, &mcts[i]));
         }
+        end = clock();
+        std::cout << "thread generate section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
         for (int i = 0; i < parallel; i++) {
             threads[i].join();
         }
+        end = clock();
+        std::cout << "Mcts section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
         int bestCount = 0;
         int bestMoveIndex = 0;
-//        int verify = 0;
         for (int i = 0; i < actionSize; i++) {
             int total = 0;
             for (int j = 0; j < parallel; j++)
-                total += simulationCount[j][i];
-//            std::cerr << total << std::endl;
-//            verify += total;
+                total += mcts[j].getSimulationCount(i);
             if (bestCount < total) {
                 bestCount = total;
                 bestMoveIndex = i;
             }
         }
-        threads.clear();
-        simulationCount.clear();
-//        std::cout << "verify: " << verify << std::endl;
+        end = clock();
+        std::cout << "choose best action section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
+//        for (int i = 0; i < (int)mcts.size(); i++) {
+//            mcts[i].resetMcts();
+//        }
+        end = clock();
+        std::cout << "mcts reset section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
+
+//        threads.clear();
+//        mcts.clear();
+//        end = clock();
+//        std::cout << "clean memory section: " << (end - start) / CLOCKS_PER_SEC << std::endl;
         return action::place(board::point(bestMoveIndex), who);
-//	    mcts.setupRoot(state);
-//	    mcts.search(int(meta["simulation"]), float(meta["explore"]));
-//        board::point move = mcts.chooseAction();
-//	    mcts.resetMcts();
-//	    return action::place(move, who);
 	}
 
-    void runMcts(board state, std::vector<int>* counter) {
-        Mcts mcts;
-        mcts.setWho(who);
-        mcts.setUctType(meta["uct"]);
-        mcts.setupRoot(state);
-        mcts.search(int(meta["simulation"]), float(meta["explore"]));
-        for (int i = 0; i < (int)counter->size(); i++)
-            (*counter)[i] = mcts.getSimulationCount(i);
-        mcts.resetMcts();
+    void runMcts(board state, Mcts* mcts) {
+	    double start = clock(), end;
+
+        end = clock();
+        std::cout << "mcts constructor end: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
+
+        mcts->setWho(who);
+        mcts->setUctType(meta["uct"]);
+        mcts->setupRoot(state);
+
+        end = clock();
+        std::cout << "mcts setup: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
+
+        mcts->search(int(meta["simulation"]), float(meta["explore"]));
+
+        end = clock();
+        std::cout << "mcts search: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+        start = end;
+
+//        for (int i = 0; i < (int)counter->size(); i++)
+//            (*counter)[i] = mcts.getSimulationCount(i);
+//
+//        end = clock();
+//        std::cout << "mcts find best action: " << (end - start) / CLOCKS_PER_SEC << std::endl;
+//        start = end;
+//
+//        mcts.resetMcts();
+//
+//        end = clock();
+//        std::cout << "mcts reset: " << (end - start) / CLOCKS_PER_SEC << std::endl;
     }
 
 private:

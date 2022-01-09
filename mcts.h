@@ -13,6 +13,8 @@
 #include <random>
 #include <ctime>
 
+// name=mcts simulation=10000 explore=0.5 uct=normal parallel=4
+
 class Mcts {
 private:
     struct Node {
@@ -31,7 +33,7 @@ public:
     Mcts() : uniform(0, board::size_x * board::size_y) {
         srand(time(NULL));
         engine.seed(rand() % 100000);
-
+        nodePool.reserve(100000);
         int actionSize = board::size_x * board::size_y;
         actions.reserve(actionSize);
         for (int i = 0; i < actionSize; i++)
@@ -51,7 +53,14 @@ public:
     }
 
     void setupRoot(const board& b) {
-        root = new Node(b);
+        nodePool.push_back(Node(b));
+        root = &nodePool.back();
+//        std::cout << "root visitCount: " << root->visitCount << std::endl;
+//        std::cout << "root wins: " << root->wins << std::endl;
+//        std::cout << "root position: \n" << root->position << std::endl;
+//        std::cout << "root from which move: " << root->fromWhichMove.i << std::endl;
+//        std::cout << "root mapActionToChild size: " << root->mapActionToChild.size() << std::endl;
+//        std::cout << "root childs size: " << root->childs.size() << std::endl;
     }
 
     void resetMcts(Node* node=nullptr) {
@@ -154,7 +163,8 @@ private:  // After testing, it should be private
         for (board::point& move : copyActions) {
             board curPosition = node->position;
             if (curPosition.place(move) == board::legal) {
-                Node* newChild = new Node(curPosition);
+                nodePool.push_back(Node(curPosition));
+                Node* newChild = &nodePool.back();
                 newChild->fromWhichMove = move;
                 node->childs.push_back(newChild);
                 node->mapActionToChild[move.i] = newChild;
@@ -221,6 +231,7 @@ public:
     Node* root;
     float exploreC;
     std::vector<board::point> actions;
+    std::vector<Node> nodePool;
     board::piece_type who;
     std::default_random_engine engine;
     std::uniform_int_distribution<int> uniform;
