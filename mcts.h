@@ -19,8 +19,17 @@ private:
         int visitCount;
         int wins;
         board position;
+        std::vector<board::point> legal;
         std::vector<Node*> childs;
-        Node(board b) : visitCount(0), wins(0), position(b) {}
+        Node(board b, std::default_random_engine& engine) : visitCount(0), wins(0), position(b) {
+            for (int i = 0; i < board::size_x * board::size_y; i++) {
+                board::point move(i);
+                board tem = b;
+                if (tem.place(move) == board::legal)
+                    legal.push_back(move);
+            }
+            std::shuffle(legal.begin(), legal.end(), engine);
+        }
     };
 
 public:
@@ -47,7 +56,9 @@ public:
     }
 
     void setupRoot(const board& b) {
-        root = new Node(b);
+        root = new Node(b, engine);
+        int result = simulate(root->position, false);
+        update(root, result);
     }
 
     void resetMcts(Node* node=nullptr) {
@@ -81,15 +92,21 @@ public:
 
 private:  // After testing, it should be private
     int traverse(Node* node, bool isOpponent=false) {
-        if (node->childs.empty()) {  // expand and simulate
-            int result = simulate(node->position, isOpponent);
-            expand(node, isOpponent);
+        if (!node->legal.empty()) {  // expand and simulate
+            Node* leaf = expand(node, isOpponent);
+            int result = simulate(leaf->position, !isOpponent);
+            update(leaf, result);
             update(node, result);
             return result;
         } else {
-            Node* nextNode = select(node, isOpponent);
+            int result;
+            if (node->childs.empty()) {  // Terminal node
+                result = simulate(node->position, isOpponent);
+            } else {
+                Node* nextNode = select(node, isOpponent);
+                result = traverse(nextNode, !isOpponent);
+            }
 //            std::cout << nextNode->position << std::endl;
-            int result = traverse(nextNode, !isOpponent);
             update(node, result);
             return result;
         }
@@ -136,15 +153,21 @@ private:  // After testing, it should be private
         return isOpponent;
     }
 
-    void expand(Node* node, bool isOpponent) {
-        std::vector<Node*> childs;
-        std::vector<board::point> copyActions = actions;
-        for (board::point& move : copyActions) {
-            board curPosition = node->position;
-            if (curPosition.place(move) == board::legal)
-                childs.push_back(new Node(curPosition));
-        }
-        node->childs = childs;
+    Node* expand(Node* node, bool isOpponent) {
+        board curPosition = node->position;
+        board::point move = node->legal.back();
+        node->legal.pop_back();
+        curPosition.place(move);
+        node->childs.push_back(new Node(curPosition, engine));
+        return node->childs.back();
+//        std::vector<Node*> childs;
+//        std::vector<board::point> copyActions = actions;
+//        for (board::point& move : copyActions) {
+//            board curPosition = node->position;
+//            if (curPosition.place(move) == board::legal)
+//                childs.push_back(new Node(curPosition));
+//        }
+//        node->childs = childs;
     }
 
     void update(Node* node, int result) {
