@@ -208,9 +208,11 @@ private:  // After testing, it should be private
         float winRate = (float)node.wins / (float)(node.visitCount + 1);
         float raveWinRate = (float)node.raveWins / (float)(node.raveCount + 1);
         // TODO: Need to think about anti uct
-        float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : (1 - beta) * winRate + beta * raveWinRate;
+//        float exploitation = (isOpponent && uctType == "anti")? 1 - winRate : (1 - beta) * winRate + beta * raveWinRate;
+        float exploitation = (1 - beta) * winRate + beta * raveWinRate;
         float exploration = sqrt(log(parentVisitCount) / (float)(node.visitCount + 1));
-        return exploitation + exploreC * exploration;
+        float score = exploitation + exploreC * exploration;
+        return (isOpponent && uctType == "anti")? -score : score;
     }
 
     board::point findActionByNextBoard(const board& nextBoard) {
