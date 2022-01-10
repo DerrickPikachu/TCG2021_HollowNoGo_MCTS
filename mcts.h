@@ -13,6 +13,8 @@
 #include <random>
 #include <ctime>
 
+// name=mcts simulation=10000 explore=0.5 uct=normal parallel=4
+
 class Mcts {
 private:
     struct Node {
@@ -61,7 +63,8 @@ public:
     }
 
     void setupRoot(const board& b) {
-        root = new Node(b, engine);
+        nodePool.push_back(Node(b, engine));
+        root = &nodePool.back();
         int result = simulate(root->position, false);
         update(root, result);
     }
@@ -74,10 +77,12 @@ public:
         delete node;
     }
 
-    void search(int timesOfMcts, float constant) {
+    void search(const board& b, int timesOfMcts, float constant) {
+        nodePool.reserve(timesOfMcts + 2);
+        nodePool.push_back(Node(b, engine));
+        root = &nodePool.back();
         exploreC = constant;
         for (int i = 0; i < timesOfMcts; i++) {
-//            std::cout << "start traverse" << std::endl;
             traverse(root);
             cleanHistory();
         }
@@ -95,6 +100,13 @@ public:
             }
         }
         return findActionByNextBoard(bestNode->position);
+    }
+
+    int getSimulationCount(int actionIndex) {
+        if (root->mapActionToChild[actionIndex] == NULL)
+            return 0;
+        else
+            return root->mapActionToChild[actionIndex]->visitCount;
     }
 
 private:  // After testing, it should be private
@@ -166,9 +178,10 @@ private:  // After testing, it should be private
         board::point move = node->legal.back();
         node->legal.pop_back();
         curPosition.place(move);
-        node->childs.push_back(new Node(curPosition, engine));
-        node->childs.back()->fromWhichMove = move;
-        node->mapActionToChild[move.i] = node->childs.back();
+        nodePool.push_back(Node(curPosition, engine));
+        nodePool.back().fromWhichMove = move;
+        node->mapActionToChild[move.i] = &nodePool.back();
+        node->childs.push_back(&nodePool.back());
         return node->childs.back();
     }
 
@@ -250,6 +263,7 @@ private:
     Node* root;
     float exploreC;
     std::vector<board::point> actions;
+    std::vector<Node> nodePool;
     std::vector<int> traverseHistory;
     board::piece_type who;
     std::default_random_engine engine;
